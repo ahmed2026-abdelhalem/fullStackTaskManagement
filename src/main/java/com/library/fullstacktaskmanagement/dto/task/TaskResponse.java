@@ -1,23 +1,20 @@
 package com.library.fullstacktaskmanagement.dto.task;
 
 import com.library.fullstacktaskmanagement.entity.enums.TaskStatus;
-import jakarta.validation.constraints.*;
-import lombok.Data;
+import lombok.*;
 
 import java.time.LocalDate;
 
 @Data
-public class TaskRequest {
+@Builder
+public class TaskResponse {
 
-    @NotBlank(message = "Title is required")
+    private Long id;
     private String title;
-
     private String description;
     private TaskStatus status;
-
-    @NotNull(message = "Due Date is required")
     private LocalDate dueDate;
-
-    @NotNull(message = "User Id is required")
     private Long userId;
+    private String userName;
+
 }
