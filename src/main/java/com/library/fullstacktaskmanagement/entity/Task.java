@@ -1,68 +1,41 @@
 package com.library.fullstacktaskmanagement.entity;
 
+import com.library.fullstacktaskmanagement.entity.enums.TaskPriority;
+import com.library.fullstacktaskmanagement.entity.enums.TaskStatus;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.LocalDate;
+
+@Entity
+@Table(name = "tasks")
+@Setter
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+
 public class Task {
 
-    private int id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long id;
+
+    @Column(nullable = false)
     private String title;
-    private String status;
-    private String priority;
-    private String dueDate;
+
     private String description;
 
-    public int getId() {
-        return id;
-    }
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TaskStatus status;
 
-    public void setId(int id) {
-        this.id = id;
-    }
+    @Enumerated(EnumType.STRING)
+    @Column(nullable= false)
+    private TaskPriority priority;
 
-    public String getTitle() {
-        return title;
-    }
+    private LocalDate dueDate;
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public String getPriority() {
-        return priority;
-    }
-
-    public void setPriority(String priority) {
-        this.priority = priority;
-    }
-
-    public String getDueDate() {
-        return dueDate;
-    }
-
-    public void setDueDate(String dueDate) {
-        this.dueDate = dueDate;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public Task(int id, String title, String status, String priority, String dueDate, String description) {
-        this.id = id;
-        this.title = title;
-        this.status = status;
-        this.priority = priority;
-        this.dueDate = dueDate;
-        this.description = description;
-    }
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 }
