@@ -14,11 +14,11 @@ export interface TaskResponse {
     id: number;
     title: string;
     description: string;
-    status: TaskStatus;
     priority: TaskPriority;
+    status: TaskStatus;
     dueDate: string;
     userId: number;
-    userName: string;
+    userName?: string;
 }
 
 export interface TaskRequest {
