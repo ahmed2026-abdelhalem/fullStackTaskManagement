@@ -10,3 +10,7 @@
 7) build task and user controller
 8) check all endpoints in project
 9) starting in frontend with angular
+
+- Second step in project 
+1) created model for task
+2) build service for task
