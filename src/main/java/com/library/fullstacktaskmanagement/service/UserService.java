@@ -33,7 +33,7 @@ public class UserService {
         return mapToUserResponse(savedUser);
     }
 
-    public UserResponse getUserBuId(Long id) {
+    public UserResponse getUserById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
 

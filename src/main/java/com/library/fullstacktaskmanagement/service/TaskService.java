@@ -36,7 +36,7 @@ public class TaskService {
         return mapToTaskResponse(savedTask);
     }
 
-    public List<TaskResponse> getTasksBuUserId(Long userId) {
+    public List<TaskResponse> getTasksByUserId(Long userId) {
         return taskRepository.findByUserId(userId)
                 .stream()
                 .map(this::mapToTaskResponse)
