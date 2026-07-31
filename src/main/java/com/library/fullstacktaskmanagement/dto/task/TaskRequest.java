@@ -1,5 +1,6 @@
 package com.library.fullstacktaskmanagement.dto.task;
 
+import com.library.fullstacktaskmanagement.entity.enums.TaskPriority;
 import com.library.fullstacktaskmanagement.entity.enums.TaskStatus;
 import jakarta.validation.constraints.*;
 import lombok.Data;
@@ -14,6 +15,9 @@ public class TaskRequest {
 
     private String description;
     private TaskStatus status;
+
+    @NotNull(message = "Priority is required")
+    private TaskPriority priority;
 
     @NotNull(message = "Due Date is required")
     private LocalDate dueDate;
