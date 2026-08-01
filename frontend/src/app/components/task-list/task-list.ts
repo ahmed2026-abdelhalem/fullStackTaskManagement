@@ -1,17 +1,22 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Task } from '../../services/task';
-import { TaskResponse, TaskStatus } from '../../models/task.model';
+import { TaskResponse, TaskStatus, TaskPriority } from '../../models/task.model';
 
 @Component({
   selector: 'app-task-list',
+  standalone: true,
   imports: [],
   templateUrl: './task-list.html',
   styleUrl: './task-list.css',
 })
 export class TaskList implements OnInit {
-  tasks: TaskResponse[] = [];
+  allTasks: TaskResponse[] = [];      
+  filteredTasks: TaskResponse[] = []; 
   loading: boolean = true;
   errorMessage: string = '';
+
+  selectedStatus: string = 'ALL';
+  selectedPriority: string = 'ALL';
 
   constructor(
     private taskService: Task,
@@ -23,10 +28,11 @@ export class TaskList implements OnInit {
   }
 
   loadTasks(): void {
+    this.loading = true;
     this.taskService.getTasks().subscribe({
       next: (data) => {
-        console.log('Fetched Tasks from Backend:', data);
-        this.tasks = data;
+        this.allTasks = data;
+        this.applyFilter();
         this.loading = false;
         this.cdr.detectChanges();
       },
@@ -36,6 +42,21 @@ export class TaskList implements OnInit {
         this.cdr.detectChanges();
         console.error('HTTP Error:', err);
       }
+    });
+  }
+
+  onFilterChange(type: 'status' | 'priority', event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    if (type === 'status') this.selectedStatus = value;
+    if (type === 'priority') this.selectedPriority = value;
+    this.applyFilter();
+  }
+
+  applyFilter(): void {
+    this.filteredTasks = this.allTasks.filter(task => {
+      const matchStatus = this.selectedStatus === 'ALL' || task.status === this.selectedStatus;
+      const matchPriority = this.selectedPriority === 'ALL' || task.priority === this.selectedPriority;
+      return matchStatus && matchPriority;
     });
   }
 
@@ -53,6 +74,7 @@ export class TaskList implements OnInit {
     this.taskService.updateTask(task.id, updatedRequest).subscribe({
       next: (updatedTask) => {
         task.status = updatedTask.status;
+        this.applyFilter();
         this.cdr.detectChanges();
       },
       error: (err) => console.error(err)
@@ -63,7 +85,8 @@ export class TaskList implements OnInit {
     if (confirm('Are you sure you want to delete this task?')) {
       this.taskService.deleteTask(id).subscribe({
         next: () => {
-          this.tasks = this.tasks.filter(t => t.id !== id);
+          this.allTasks = this.allTasks.filter(t => t.id !== id);
+          this.applyFilter();
           this.cdr.detectChanges();
         },
         error: (err) => console.error(err)
