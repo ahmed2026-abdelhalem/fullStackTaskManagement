@@ -1,18 +1,23 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { Task } from '../../services/task';
-import { TaskResponse, TaskStatus, TaskPriority } from '../../models/task.model';
+import { AuthService } from '../../services/auth-service';
+import { TaskRequest, TaskResponse, TaskStatus } from '../../models/task.model';
+import { TaskForm } from '../task-form/task-form';
 
 @Component({
   selector: 'app-task-list',
   standalone: true,
-  imports: [],
+  imports: [CommonModule, TaskForm],
   templateUrl: './task-list.html',
-  styleUrl: './task-list.css',
+  styleUrl: './task-list.css'
 })
 export class TaskList implements OnInit {
-  allTasks: TaskResponse[] = [];      
-  filteredTasks: TaskResponse[] = []; 
-  loading: boolean = true;
+  allTasks: TaskResponse[] = [];
+  filteredTasks: TaskResponse[] = [];
+  currentUser: any = null;
+  loading: boolean = false;
   errorMessage: string = '';
 
   selectedStatus: string = 'ALL';
@@ -20,64 +25,103 @@ export class TaskList implements OnInit {
 
   constructor(
     private taskService: Task,
-    private cdr: ChangeDetectorRef
+    private authService: AuthService,
+    private router: Router,
+    private cd: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    this.loadTasks();
+    this.currentUser = this.authService.getCurrentUser();
+    this.loadMyTasks();
   }
 
-  loadTasks(): void {
+  loadMyTasks(): void {
+    this.currentUser = this.authService.getCurrentUser();
+
+    if (!this.currentUser) {
+      this.errorMessage = 'User session not found. Please log in again.';
+      return;
+    }
+
+    const currentUserId = this.currentUser.id ? Number(this.currentUser.id) : null;
+
+    if (!currentUserId) {
+      this.errorMessage = 'Invalid user ID. Please log in again.';
+      return;
+    }
+
     this.loading = true;
-    this.taskService.getTasks().subscribe({
+    this.errorMessage = '';
+
+    this.taskService.getTasks(currentUserId).subscribe({
       next: (data) => {
-        this.allTasks = data;
-        this.applyFilter();
+        this.allTasks = data || [];
+        this.applyFilters();
         this.loading = false;
-        this.cdr.detectChanges();
+        this.cd.detectChanges();
       },
       error: (err) => {
-        this.errorMessage = 'Failed to load tasks!';
+        console.error('Error fetching tasks:', err);
+        this.errorMessage = err.error?.message || 'Failed to fetch tasks.';
         this.loading = false;
-        this.cdr.detectChanges();
-        console.error('HTTP Error:', err);
+        this.cd.detectChanges();
       }
     });
   }
 
-  onFilterChange(type: 'status' | 'priority', event: Event): void {
+  onFilterChange(filterType: 'status' | 'priority', event: Event): void {
     const value = (event.target as HTMLSelectElement).value;
-    if (type === 'status') this.selectedStatus = value;
-    if (type === 'priority') this.selectedPriority = value;
-    this.applyFilter();
+    if (filterType === 'status') {
+      this.selectedStatus = value;
+    } else if (filterType === 'priority') {
+      this.selectedPriority = value;
+    }
+    this.applyFilters();
   }
 
-  applyFilter(): void {
-    this.filteredTasks = this.allTasks.filter(task => {
-      const matchStatus = this.selectedStatus === 'ALL' || task.status === this.selectedStatus;
-      const matchPriority = this.selectedPriority === 'ALL' || task.priority === this.selectedPriority;
-      return matchStatus && matchPriority;
+  applyFilters(): void {
+    const currentUserId = this.currentUser && this.currentUser.id ? Number(this.currentUser.id) : null;
+
+    const filtered = this.allTasks.filter(task => {
+      const taskUserId = task.userId ? Number(task.userId) : null;
+      const matchUser = currentUserId ? taskUserId === currentUserId : true;
+
+      const taskStatus = task.status ? String(task.status).toUpperCase() : '';
+      const taskPriority = task.priority ? String(task.priority).toUpperCase() : '';
+
+      const matchStatus = this.selectedStatus === 'ALL' || taskStatus === this.selectedStatus;
+      const matchPriority = this.selectedPriority === 'ALL' || taskPriority === this.selectedPriority;
+
+      return matchUser && matchStatus && matchPriority;
     });
+
+    this.filteredTasks = [...filtered];
+    this.cd.detectChanges();
+  }
+
+  onTaskCreated(): void {
+    this.loadMyTasks();
   }
 
   onStatusChange(task: TaskResponse, event: Event): void {
     const newStatus = (event.target as HTMLSelectElement).value as TaskStatus;
-    const updatedRequest = {
+
+    const updatedTaskRequest: TaskRequest = {
       title: task.title,
       description: task.description,
-      priority: task.priority,
       status: newStatus,
+      priority: task.priority,
       dueDate: task.dueDate,
-      userId: task.userId
+      userId: Number(task.userId)
     };
 
-    this.taskService.updateTask(task.id, updatedRequest).subscribe({
-      next: (updatedTask) => {
-        task.status = updatedTask.status;
-        this.applyFilter();
-        this.cdr.detectChanges();
+    this.taskService.updateTask(task.id, updatedTaskRequest).subscribe({
+      next: () => {
+        this.loadMyTasks();
       },
-      error: (err) => console.error(err)
+      error: (err) => {
+        console.error('Error updating task status', err);
+      }
     });
   }
 
@@ -85,12 +129,17 @@ export class TaskList implements OnInit {
     if (confirm('Are you sure you want to delete this task?')) {
       this.taskService.deleteTask(id).subscribe({
         next: () => {
-          this.allTasks = this.allTasks.filter(t => t.id !== id);
-          this.applyFilter();
-          this.cdr.detectChanges();
+          this.loadMyTasks();
         },
-        error: (err) => console.error(err)
+        error: (err) => {
+          console.error('Error deleting task', err);
+        }
       });
     }
+  }
+
+  onLogout(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 }

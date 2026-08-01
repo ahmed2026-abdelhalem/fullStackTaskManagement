@@ -6,30 +6,43 @@ import { Observable, tap } from 'rxjs';
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:8080/api/auth';
+  private usersUrl = 'http://localhost:8080/api/users';
 
   constructor(private http: HttpClient) {}
 
   register(userData: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/register`, userData);
+    return this.http.post(`${this.usersUrl}/register`, userData);
   }
 
   login(credentials: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/login`, credentials).pipe(
-      tap(response => {
-        if (response && response.token) {
-          localStorage.setItem('token', response.token);
-        }
-      })
-    );
-  }
+  return this.http.post<any>(`${this.usersUrl}/login`, credentials).pipe(
+    tap(response => {
+      if (response && response.token) {
+        localStorage.setItem('token', response.token);
+      }
+      if (response) {
+        localStorage.setItem('user', JSON.stringify({
+          id: Number(response.id), 
+          name: response.name,
+          email: response.email
+        }));
+      }
+    })
+  );
+}
 
   getToken(): string | null {
     return localStorage.getItem('token');
   }
 
+  getCurrentUser(): any {
+    const userJson = localStorage.getItem('user');
+    return userJson ? JSON.parse(userJson) : null;
+  }
+
   logout(): void {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
   }
 
   isLoggedIn(): boolean {

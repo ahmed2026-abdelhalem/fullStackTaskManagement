@@ -11,7 +11,10 @@ export class Task {
 
   constructor(private http: HttpClient) {}
 
-  getTasks(): Observable<TaskResponse[]> {
+  getTasks(userId?: number): Observable<TaskResponse[]> {
+    if (userId) {
+      return this.http.get<TaskResponse[]>(`${this.apiUrl}/user/${userId}`);
+    }
     return this.http.get<TaskResponse[]>(this.apiUrl);
   }
 

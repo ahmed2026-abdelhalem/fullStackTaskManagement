@@ -3,8 +3,8 @@
 
   <form (ngSubmit)="onLogin()">
     <div style="margin-bottom: 15px;">
-      <label>Username</label>
-      <input type="text" [(ngModel)]="credentials.username" name="username" required class="form-control" style="width: 100%; padding: 8px;">
+      <label>Email</label>
+      <input type="email" [(ngModel)]="credentials.email" name="email" required class="form-control" style="width: 100%; padding: 8px;">
     </div>
 
     <div style="margin-bottom: 15px;">
@@ -16,4 +16,8 @@
   </form>
 
   <p *ngIf="errorMessage" style="color: red; margin-top: 10px;">{{ errorMessage }}</p>
+
+  <div style="margin-top: 15px; text-align: center;">
+    <a routerLink="/register" style="color: #007bff; text-decoration: none;">Don't have an account? Register</a>
+  </div>
 </div>

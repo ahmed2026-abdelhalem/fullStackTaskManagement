@@ -22,10 +22,10 @@ export interface TaskResponse {
 }
 
 export interface TaskRequest {
-  title: string;
-  description: string;
-  status?: TaskStatus;
-  priority: TaskPriority;
-  dueDate: string;
-  userId: number;
+    title: string;
+    description: string;
+    status?: TaskStatus;
+    priority: TaskPriority;
+    dueDate: string;
+    userId: number;
 }
