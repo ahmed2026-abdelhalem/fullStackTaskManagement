@@ -21,11 +21,10 @@ public class TaskService {
 
     @Transactional
     public TaskResponse createTask(TaskRequest request) {
-
-        User user = userRepository.findById(request.getUserId()).orElseThrow(() -> new RuntimeException("User not found with id: " + request.getUserId()));
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + request.getUserId()));
 
         Task task = new Task();
-
         task.setTitle(request.getTitle());
         task.setDescription(request.getDescription());
         task.setDueDate(request.getDueDate());
@@ -35,6 +34,13 @@ public class TaskService {
 
         Task savedTask = taskRepository.save(task);
         return mapToTaskResponse(savedTask);
+    }
+
+    public List<TaskResponse> getTasksByUserId(Long userId) {
+        return taskRepository.findByUserId(userId)
+                .stream()
+                .map(this::mapToTaskResponse)
+                .collect(Collectors.toList());
     }
 
     public List<TaskResponse> getAllTasks() {
@@ -47,26 +53,14 @@ public class TaskService {
     public TaskResponse getTaskById(Long taskId) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found with id: " + taskId));
-        return mapToTaskResponse(task);
-    }
 
-    public List<TaskResponse> getTasksByUserId(Long userId) {
-        return taskRepository.findByUserId(userId)
-                .stream()
-                .map(this::mapToTaskResponse)
-                .collect(Collectors.toList());
+        return mapToTaskResponse(task);
     }
 
     @Transactional
     public TaskResponse updateTask(Long taskId, TaskRequest request) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found with id: " + taskId));
-
-        if (!task.getUser().getId().equals(request.getUserId())) {
-            User newUser = userRepository.findById(request.getUserId())
-                    .orElseThrow(() -> new RuntimeException("User not found with id: " + request.getUserId()));
-            task.setUser(newUser);
-        }
 
         task.setTitle(request.getTitle());
         task.setDescription(request.getDescription());
@@ -81,13 +75,11 @@ public class TaskService {
     }
 
     @Transactional
-    public void deleteTask(Long taskId){
+    public void deleteTask(Long taskId) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Task not found with id: " + taskId));
 
-        if (!taskRepository.existsById(taskId)) {
-            throw new RuntimeException("Task not found with id: " + taskId);
-        }
-
-        taskRepository.deleteById(taskId);
+        taskRepository.delete(task);
     }
 
     private TaskResponse mapToTaskResponse(Task task) {

@@ -20,8 +20,7 @@ public class TaskController {
     private final TaskService taskService;
 
     @PostMapping
-    public ResponseEntity<TaskResponse> createTask(@RequestBody TaskRequest request) {
-
+    public ResponseEntity<TaskResponse> createTask(@Valid @RequestBody TaskRequest request) {
         TaskResponse response = taskService.createTask(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -31,17 +30,14 @@ public class TaskController {
         return ResponseEntity.ok(taskService.getAllTasks());
     }
 
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<TaskResponse>> getTasksByUserId(@PathVariable Long userId) {
+        return ResponseEntity.ok(taskService.getTasksByUserId(userId));
+    }
+
     @GetMapping("/{taskId}")
     public ResponseEntity<TaskResponse> getTaskById(@PathVariable Long taskId) {
         return ResponseEntity.ok(taskService.getTaskById(taskId));
-    }
-
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<TaskResponse>> getTasksByUserId(@PathVariable Long userId) {
-
-        List<TaskResponse> tasks = taskService.getTasksByUserId(userId);
-
-        return ResponseEntity.ok(tasks);
     }
 
     @PutMapping("/{taskId}")
@@ -54,9 +50,7 @@ public class TaskController {
 
     @DeleteMapping("/{taskId}")
     public ResponseEntity<Void> deleteTask(@PathVariable Long taskId) {
-
         taskService.deleteTask(taskId);
-
         return ResponseEntity.noContent().build();
     }
 }

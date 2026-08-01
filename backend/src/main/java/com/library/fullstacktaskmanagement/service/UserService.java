@@ -1,5 +1,7 @@
 package com.library.fullstacktaskmanagement.service;
 
+import com.library.fullstacktaskmanagement.dto.user.AuthResponse;
+import com.library.fullstacktaskmanagement.dto.user.UserLoginRequest;
 import com.library.fullstacktaskmanagement.dto.user.UserRegisterRequest;
 import com.library.fullstacktaskmanagement.dto.user.UserResponse;
 import com.library.fullstacktaskmanagement.entity.User;
@@ -17,7 +19,6 @@ public class UserService {
 
     @Transactional
     public UserResponse registerUser(UserRegisterRequest request) {
-
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email is already registered");
         }
@@ -31,6 +32,24 @@ public class UserService {
         User savedUser = userRepository.save(user);
 
         return mapToUserResponse(savedUser);
+    }
+
+    public AuthResponse loginUser(UserLoginRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+
+        if (!user.getPassword().equals(request.getPassword())) {
+            throw new RuntimeException("Invalid email or password");
+        }
+
+        String token = "dummy-jwt-token-for-" + user.getEmail();
+
+        return AuthResponse.builder()
+                .token(token)
+                .id(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .build();
     }
 
     public UserResponse getUserById(Long id) {
